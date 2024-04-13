@@ -66,7 +66,7 @@ namespace ConnectFourGame
         {
             for (int row = Rows - 1; row >= 0; row--)
             {
-                if (grid[row, col] == '#')
+                if (grid[row, col] == '#')  // if the grid is empty, drop the piece
                 {
                     grid[row, col] = token;
                     return true;
