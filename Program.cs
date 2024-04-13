@@ -34,7 +34,7 @@ namespace ConnectFourGame
             {
                 for (int col = 0; col < Cols; col++)
                 {
-                    grid[row, col] = '#'; // mark empty gird with #
+                    grid[row, col] = '#'; // mark empty grid with #
                 }
             }
         }
