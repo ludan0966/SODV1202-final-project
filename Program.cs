@@ -232,7 +232,7 @@ namespace ConnectFourGame
                 string playAgain = Console.ReadLine().ToLower();
                 if (playAgain != "1")
                 {
-                    break; // if player inputs 2, exit the game
+                    break; // if player inputs 0, exit the game
                 }
             }
         }
