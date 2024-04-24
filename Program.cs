@@ -1,20 +1,73 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 
 namespace ConnectFourGame
 {
-    // Define Player Class
-    public class Player
+    // Define abstract Player Class
+    public abstract class Player
     {
         public string Name { get; }
 
-        public Player(string name)
+        protected Player(string name)
         {
             Name = name;
         }
+
+        // Abstract method for choosing column
+        public abstract int ChooseColumn(Board board);
     }
 
-    // define Board Class
+    // Define HumanPlayer Class inheriting from Player
+    public class HumanPlayer : Player
+    {
+        public HumanPlayer(string name) : base(name) { }
+
+        public override int ChooseColumn(Board board)
+        {
+            int col;
+            while (true)
+            {
+                Console.Write("Enter column (1-7): ");
+                if (int.TryParse(Console.ReadLine(), out col) && col >= 1 && col <= 7)
+                {
+                    if (board.IsColumnFull(col - 1))
+                    {
+                        Console.WriteLine("This column is already full. Please choose another column.");
+                    }
+                    else
+                    {
+                        return col - 1;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid column. Please choose a valid column.");
+                }
+            }
+        }
+    }
+
+    // Define AIPlayer Class inheriting from Player
+    public class AIPlayer : Player
+    {
+        public AIPlayer(string name) : base(name) { }
+
+        public override int ChooseColumn(Board board)
+        {
+            // Implement AI logic to choose column
+            // For simplicity, let's just choose a random column
+            Random random = new Random();
+            int col;
+            do
+            {
+                col = random.Next(7); // Random column from 0 to 6
+            } while (board.IsColumnFull(col));
+
+            Console.WriteLine($"AI {Name} chooses column: {col + 1}");
+            return col;
+        }
+    }
+
+    // Define Board Class
     public class Board
     {
         private const int Rows = 6;
@@ -42,7 +95,6 @@ namespace ConnectFourGame
         // Print Board
         public void PrintBoard()
         {
-            
             for (int row = 0; row < Rows; row++)
             {
                 Console.Write("| ");
@@ -61,12 +113,11 @@ namespace ConnectFourGame
             return grid[0, col] != '#';
         }
 
-        
         public bool PlaceToken(int col, char token)
         {
             for (int row = Rows - 1; row >= 0; row--)
             {
-                if (grid[row, col] == '#')  // if the grid is empty, drop the piece
+                if (grid[row, col] == '#')
                 {
                     grid[row, col] = token;
                     return true;
@@ -75,7 +126,7 @@ namespace ConnectFourGame
             return false;
         }
 
-        // Check if there is winner
+        // Check if there is a winner
         public bool CheckWin(char token)
         {
             // Check if there are four-in-a-row of the same symbol
@@ -94,7 +145,6 @@ namespace ConnectFourGame
             }
 
             // Check if there are four-in-a-column of the same symbol
-
             for (int row = 0; row < Rows - 3; row++)
             {
                 for (int col = 0; col < Cols; col++)
@@ -142,7 +192,7 @@ namespace ConnectFourGame
             return false;
         }
 
-        // Check if board if full
+        // Check if board is full
         public bool IsBoardFull()
         {
             for (int col = 0; col < Cols; col++)
@@ -159,81 +209,94 @@ namespace ConnectFourGame
     // Define ConnectFourGame Class
     public class ConnectFourGame
     {
-        private readonly Player[] players;
+        private Player player1;
+        private Player player2;
         private Board board;
-        private int currentPlayerIndex;
+        private Player currentPlayer;
 
-        public ConnectFourGame(string player1Name, string player2Name)
+        public ConnectFourGame()
         {
-            players = new Player[2];
-            players[0] = new Player(player1Name);
-            players[1] = new Player(player2Name);
+            board = new Board();
         }
 
-        // Play Game Method
-        public void PlayGame()
+        // Start Game Method
+        public void StartGame()
         {
+            Console.WriteLine("Welcome to Connect Four Game!");
             while (true)
             {
-                board = new Board();
-                currentPlayerIndex = new Random().Next(2); // Randomly pick a palyer to drop the piece first
-
-                while (true)
+                Console.WriteLine("Select game mode:");
+                Console.WriteLine("1. Player vs Player");
+                Console.WriteLine("2. Player vs AI");
+                Console.Write("Enter your choice (1 or 2): ");
+                int choice;
+                while (!int.TryParse(Console.ReadLine(), out choice) || (choice != 1 && choice != 2))
                 {
-                    board.PrintBoard();
-                    Console.WriteLine($"Player {players[currentPlayerIndex].Name}'s turn.");
-
-                    int col;
-                    while (true)
-                    {
-                        Console.Write("Enter column (1-7): ");
-                        if (int.TryParse(Console.ReadLine(), out col) && col >= 1 && col <= 7)
-                        {
-                            if (board.IsColumnFull(col - 1))
-                            {
-                                Console.WriteLine("This column is already full. Please choose another column.");
-                            }
-                            else
-                            {
-                                break; 
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid column. Please choose a valid column.");
-                        }
-                    }
-
-                    char token = currentPlayerIndex == 0 ? 'X' : 'O';
-                    if (!board.PlaceToken(col - 1, token))
-                    {
-                        Console.WriteLine("This column is already full. Please choose another column.");
-                        continue; // ask the player to choose another column
-                    }
-
-                    if (board.CheckWin(token))
-                    {
-                        board.PrintBoard();
-                        Console.WriteLine($"It's Connect 4!  {players[currentPlayerIndex].Name} wins!");
-                        break;
-                    }
-
-                    if (board.IsBoardFull())
-                    {
-                        board.PrintBoard();
-                        Console.WriteLine("It's a draw!");
-                        break;
-                    }
-
-                    currentPlayerIndex = (currentPlayerIndex + 1) % 2;
+                    Console.WriteLine("Invalid choice. Please enter 1 or 2.");
                 }
 
-                Console.Write("Restart? Yes(1) N0(0):");
+                if (choice == 1)
+                {
+                    Console.Write("Enter player 1 name: ");
+                    string player1Name = Console.ReadLine();
+                    Console.Write("Enter player 2 name: ");
+                    string player2Name = Console.ReadLine();
+                    player1 = new HumanPlayer(player1Name);
+                    player2 = new HumanPlayer(player2Name);
+                }
+                else
+                {
+                    Console.Write("Enter your name: ");
+                    string playerName = Console.ReadLine();
+                    player1 = new HumanPlayer(playerName);
+                    player2 = new AIPlayer("AI");
+                }
+
+                currentPlayer = player1;
+                PlayGame();
+
+                Console.Write("Restart? Yes(1) No(0): ");
                 string playAgain = Console.ReadLine().ToLower();
                 if (playAgain != "1")
                 {
-                    break; // if player inputs 0, exit the game
+                    break; // Exit the game
                 }
+            }
+        }
+
+        // Play Game Method
+        private void PlayGame()
+        {
+            board = new Board();
+            while (true)
+            {
+                board.PrintBoard();
+                Console.WriteLine($"Player {currentPlayer.Name}'s turn.");
+
+                int col = currentPlayer.ChooseColumn(board);
+
+                char token = currentPlayer == player1 ? 'X' : 'O';
+                if (!board.PlaceToken(col, token))
+                {
+                    Console.WriteLine("This column is already full. Please choose another column.");
+                    continue; // ask the player to choose another column
+                }
+
+                if (board.CheckWin(token))
+                {
+                    board.PrintBoard();
+                    Console.WriteLine($"It's Connect 4!  {currentPlayer.Name} wins!");
+                    break;
+                }
+
+                if (board.IsBoardFull())
+                {
+                    board.PrintBoard();
+                    Console.WriteLine("It's a draw!");
+                    break;
+                }
+
+                currentPlayer = (currentPlayer == player1) ? player2 : player1;
             }
         }
     }
@@ -242,14 +305,8 @@ namespace ConnectFourGame
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Welcome to Connect Four Game!");
-            Console.Write("Enter player 1 name: ");
-            string player1Name = Console.ReadLine();
-            Console.Write("Enter player 2 name: ");
-            string player2Name = Console.ReadLine();
-
-            ConnectFourGame game = new ConnectFourGame(player1Name, player2Name);
-            game.PlayGame();
+            ConnectFourGame game = new ConnectFourGame();
+            game.StartGame();
         }
     }
 }
